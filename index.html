@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Prepositions Game - Updated</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: linear-gradient(135deg, #4e65ff, #92efff);
+        margin: 0;
+        padding: 0;
+        text-align: center;
+        color: white;
+        overflow-x: hidden;
+    }
+
+    #start-screen {
+        margin-top: 120px;
+        padding: 20px;
+    }
+
+    h1 {
+        font-size: 40px;
+        margin-bottom: 15px;
+    }
+
+    button {
+        padding: 15px 30px;
+        font-size: 22px;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        background: #fff;
+        color: #333;
+        transition: 0.3s;
+    }
+
+    button:hover { background: #ffecec; }
+
+    #timer {
+        font-size: 24px;
+        margin-top: 15px;
+        font-weight: bold;
+    }
+
+    #game { display: none; margin-top: 20px; }
+
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(5, 60px);
+        gap: 10px;
+        justify-content: center;
+        padding-bottom: 20px;
+    }
+
+    @media (min-width: 600px) {
+        .grid { grid-template-columns: repeat(6, 80px); }
+    }
+
+    .cell {
+        background: rgba(255,255,255,0.9);
+        color: #333;
+        padding: 18px 0;
+        font-size: 20px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: 0.3s;
+        animation: fadeIn 0.5s;
+    }
+
+    .cell:hover { background: #ffe4e4; }
+
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateX(100%); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    #question-page {
+        display: none;
+        animation: slideIn 0.5s;
+    }
+
+    #question-box {
+        background: #fff;
+        color: #333;
+        padding: 20px;
+        width: 85%;
+        max-width: 420px;
+        margin: 20px auto;
+        border-radius: 15px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.3);
+    }
+
+    .option {
+        background: #eee;
+        padding: 12px;
+        margin: 8px 0;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: 0.3s;
+        font-size: 20px;
+    }
+
+    .option:hover { background: #ddd; }
+
+    .correct { background: #4CAF50 !important; color: white; }
+    .wrong { background: #E53935 !important; color: white; }
+
+    #feedback {
+        margin-top: 10px;
+        font-size: 22px;
+        font-weight: bold;
+    }
+
+    #back-btn {
+        margin-top: 20px;
+        display: none;
+    }
+</style>
+</head>
+<body>
+
+<div id="start-screen">
+    <h1>Prepositions Game</h1>
+    <button onclick="startGame()">Start Game</button>
+    <div id="timer"></div>
+</div>
+
+<div id="game">
+    <div class="grid" id="grid"></div>
+</div>
+
+<div id="question-page">
+    <div id="question-box">
+        <h3 id="question-text"></h3>
+        <div id="options"></div>
+        <div id="feedback"></div>
+        <button id="back-btn" onclick="goBack()">Back</button>
+    </div>
+</div>
+
+<script>
+let seconds = 0;
+let timerInterval;
+
+const encouragement = [
+    "Great job! Keep it up!",
+    "Awesome work!",
+    "Wonderful answer!",
+    "Perfect!",
+    "Wow! Excellent!"
+];
+
+const tryAgainText = "Wrong… try again!";
+
+const questions = [
+    { q: "We will meet ___ 7:45 exactly.", a: "at" },
+    { q: "He was born ___ February, but the party is ___ Feb 5.", a: "in" },
+    { q: "The meeting will begin ___ the afternoon.", a: "in" },
+    { q: "She left her phone ___ the bus.", a: "on" },
+    { q: "The class starts ___ Monday morning.", a: "on" },
+    { q: "My birthday is ___ June.", a: "in" },
+    { q: "They arrived ___ the same time.", a: "at" },
+    { q: "I will finish the task ___ two hours.", a: "in" },
+    { q: "The shop closes ___ midnight.", a: "at" },
+    { q: "There is a spider ___ the ceiling.", a: "on" },
+    { q: "He usually wakes up ___ sunrise.", a: "at" },
+    { q: "We travel a lot ___ summer.", a: "in" },
+    { q: "The book is ___ the top shelf.", a: "on" },
+    { q: "The flowers bloom ___ spring.", a: "in" },
+    { q: "She forgot her bag ___ the car.", a: "in" },
+    { q: "The movie was released ___ 1998.", a: "in" },
+    { q: "The party is ___ Friday night.", a: "on" },
+    { q: "Let's meet ___ the entrance.", a: "at" },
+    { q: "He disappeared ___ the dark.", a: "in" },
+    { q: "The news was announced ___ the radio.", a: "on" },
+    { q: "I usually sleep ___ the afternoon.", a: "in" },
+    { q: "The exam begins ___ 8:00 AM.", a: "at" },
+    { q: "We moved here ___ 2010.", a: "in" },
+    { q: "She stood ___ the corner of the street.", a: "at" },
+    { q: "You cannot smoke ___ the airplane.", a: "on" },
+    { q: "He will be back ___ a moment.", a: "in" },
+    { q: "The picture is ___ the wall.", a: "on" },
+    { q: "The project ends ___ December.", a: "in" },
+    { q: "We eat lunch ___ noon.", a: "at" },
+    { q: "He finished the homework ___ an hour.", a: "-" }
+];
+
+function startGame() {
+    document.getElementById("start-screen").style.display = "none";
+    document.getElementById("game").style.display = "block";
+    startTimer();
+
+    const grid = document.getElementById("grid");
+
+    for (let i = 0; i < 30; i++) {
+        const cell = document.createElement("div");
+        cell.className = "cell";
+        cell.textContent = i + 1;
+        cell.onclick = () => showQuestion(i);
+        grid.appendChild(cell);
+    }
+}
+
+function startTimer() {
+    timerInterval = setInterval(() => {
+        seconds++;
+        document.getElementById("timer").textContent = "Time: " + seconds + " sec";
+    }, 1000);
+}
+
+function showQuestion(i) {
+    document.getElementById("game").style.display = "none";
+    document.getElementById("question-page").style.display = "block";
+
+    const qBox = document.getElementById("question-box");
+    document.getElementById("question-text").textContent = questions[i].q;
+
+    const optionsDiv = document.getElementById("options");
+    optionsDiv.innerHTML = "";
+
+    const feedback = document.getElementById("feedback");
+    feedback.textContent = "";
+
+    const backBtn = document.getElementById("back-btn");
+    backBtn.style.display = "none";
+
+    const choices = ["in", "on", "at", "-"];
+
+    choices.forEach(choice => {
+        const btn = document.createElement("div");
+        btn.className = "option";
+        btn.textContent = choice;
+        btn.onclick = () => {
+            if (choice === questions[i].a) {
+                btn.classList.add("correct");
+                feedback.textContent = encouragement[Math.floor(Math.random() * encouragement.length)];
+                backBtn.style.display = "block";
+            } else {
+                btn.classList.add("wrong");
+                feedback.textContent = tryAgainText;
+            }
+        };
+        optionsDiv.appendChild(btn);
+    });
+}
+
+function goBack() {
+    document.getElementById("question-page").style.display = "none";
+    document.getElementById("game").style.display = "block";
+}
+</script>
+
+</body>
+</html>
